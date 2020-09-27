@@ -63,8 +63,8 @@ int mpu_init(void)
     MPU_InitStruct.TypeExtField      = MPU_TEX_LEVEL0;
     MPU_InitStruct.SubRegionDisable  = 0x00;
     MPU_InitStruct.DisableExec       = MPU_INSTRUCTION_ACCESS_ENABLE;
-	
-	HAL_MPU_ConfigRegion(&MPU_InitStruct);	
+
+    HAL_MPU_ConfigRegion(&MPU_InitStruct);
 #endif
 
     /* Enable the MPU */
