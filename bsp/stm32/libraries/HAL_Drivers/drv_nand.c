@@ -19,6 +19,8 @@
 
 #define NAND_RB_PIN GET_PIN(D, 6)
 
+static NAND_HandleTypeDef nand_handle = {0};
+
 static rt_uint32_t ecc_rdbuf[NAND_MAX_PAGE_SIZE/NAND_ECC_SECTOR_SIZE];	
 static rt_uint32_t ecc_hdbuf[NAND_MAX_PAGE_SIZE/NAND_ECC_SECTOR_SIZE];	
 struct rthw_fmc
@@ -28,51 +30,10 @@ struct rthw_fmc
 };
 static struct rthw_fmc _device = {0};
 
-static void rt_hw_nand_gpio_init(void)
+static struct stm32_nand_config nand_config[] =
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-#if defined(SOC_SERIES_STM32MP1)    
-    RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-    if (IS_ENGINEERING_BOOT_MODE())
-    {
-        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FMC;
-        PeriphClkInit.AdcClockSelection = RCC_FMCCLKSOURCE_ACLK;
-        if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-        {
-            Error_Handler();
-        }
-    }
-#endif
-    __HAL_RCC_FMC_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOG_CLK_ENABLE();
-
-    /* PD6 R/B */
-    GPIO_InitStruct.Pin = GPIO_PIN_6;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-    /* PG9 NCE */
-    GPIO_InitStruct.Pin = GPIO_PIN_9;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
-    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
-
-    /* PD0,1,4,5,11,12,14,15 */
-    GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
-                          GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_14 | GPIO_PIN_15;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-    /* PE7,8,9,10 */
-    GPIO_InitStruct.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-}
+    NAND_FLASH_CONFIG
+};
 
 /* nand delay */
 static void rt_hw_nand_delay(volatile uint32_t i)
@@ -88,7 +49,7 @@ static rt_err_t rt_hw_nand_read_status(void)
 {
     rt_err_t result = RT_EOK;
 
-    NAND_CMD_AREA = NAND_READSTA;
+    NAND_SEND_CMD = NAND_READSTA;
 
     rt_hw_nand_delay(NAND_TWHR_DELAY);
 
@@ -124,8 +85,8 @@ static rt_err_t rt_hw_nand_wait_ready(void)
 /* set nand mode */
 static rt_err_t rt_hw_nand_set_mode(uint8_t mode)
 {
-    NAND_CMD_AREA = NAND_FEATURE;
-    NAND_DATA_AREA = 0x01;
+    NAND_SEND_CMD = NAND_FEATURE;
+    NAND_SEND_ADDR = 0x01;
     NAND_ADDR_AREA = mode;
     NAND_ADDR_AREA = 0;
     NAND_ADDR_AREA = 0;
@@ -144,7 +105,7 @@ static rt_err_t rt_hw_nand_set_mode(uint8_t mode)
 /* reset nand flash */
 static rt_err_t rt_hw_nand_reset(void)
 {
-    NAND_CMD_AREA = NAND_RESET;
+    NAND_SEND_CMD = NAND_RESET;
 
     if (rt_hw_nand_wait_ready() == RT_EOK)
     {
@@ -163,8 +124,8 @@ static rt_err_t _read_id(struct rt_mtd_nand_device *device)
 
     uint8_t deviceid[5];
 
-    NAND_CMD_AREA = NAND_READID; /* read id command */
-    NAND_DATA_AREA = 0x00;
+    NAND_SEND_CMD = NAND_READID; /* read id command */
+    NAND_SEND_ADDR = 0x00;
 
     deviceid[0] = NAND_ADDR_AREA; /* Byte 0 */
     deviceid[1] = NAND_ADDR_AREA; /* Byte 1 */
@@ -248,11 +209,11 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
                            rt_uint8_t *spare,
                            rt_uint32_t spare_len)
 {
-    RT_ASSERT(device != RT_NULL);
-
     rt_uint32_t index, i, tickstart, eccnum;
     rt_err_t result;
     rt_uint8_t *p = RT_NULL;
+    
+    RT_ASSERT(device != RT_NULL);
     
     page = page + device->block_start * device->pages_per_block;
     if (page / device->pages_per_block > device->block_end)
@@ -263,13 +224,13 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
     rt_mutex_take(&_device.lock, RT_WAITING_FOREVER);
     if (data && data_len)
     {
-        NAND_CMD_AREA  = NAND_AREA_A;
-        NAND_DATA_AREA = (rt_uint8_t)0;
-        NAND_DATA_AREA = (rt_uint8_t)(0 >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)page;
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 16);
-        NAND_CMD_AREA  = NAND_AREA_TRUE1;
+        NAND_SEND_CMD  = NAND_AREA_A;
+        NAND_SEND_ADDR = (rt_uint8_t)0;
+        NAND_SEND_ADDR = (rt_uint8_t)(0 >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)page;
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 16);
+        NAND_SEND_CMD  = NAND_AREA_TRUE1;
         
         rt_hw_nand_delay(10);
         
@@ -283,7 +244,7 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
         }
         else
         {
-            eccnum = data_len/NAND_ECC_SECTOR_SIZE;			
+            eccnum = data_len / NAND_ECC_SECTOR_SIZE;			
             p = data;
             for (index = 0; index < 4; index++)
             {
@@ -301,7 +262,7 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
                     /* Check for the Timeout */
                     if ((rt_tick_get() - tickstart) > 10000)
                     {
-                        result = RT_ETIMEOUT;
+                        result = -RT_ETIMEOUT;
                         goto _exit;
                     }
                 }
@@ -317,10 +278,10 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
             
             rt_hw_nand_delay(10);
             
-            NAND_CMD_AREA  = 0x05;
-            NAND_DATA_AREA = (rt_uint8_t)i;
-            NAND_DATA_AREA = (rt_uint8_t)(i>>8);
-            NAND_CMD_AREA  = 0xE0;
+            NAND_SEND_CMD  = NAND_RANDOM_READ;
+            NAND_SEND_ADDR = (rt_uint8_t)i;
+            NAND_SEND_ADDR = (rt_uint8_t)(i>>8);
+            NAND_SEND_CMD  = NAND_START_READ;
             
             rt_hw_nand_delay(10);
             
@@ -345,13 +306,13 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
     }    
     if (spare && spare_len)
     {
-        NAND_CMD_AREA  = NAND_AREA_A;
-        NAND_DATA_AREA = (rt_uint8_t)0;
-        NAND_DATA_AREA = (rt_uint8_t)(0 >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)page;
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 16);
-        NAND_CMD_AREA  = NAND_AREA_TRUE1;
+        NAND_SEND_CMD  = NAND_AREA_A;
+        NAND_SEND_ADDR = (rt_uint8_t)0;
+        NAND_SEND_ADDR = (rt_uint8_t)(0 >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)page;
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 16);
+        NAND_SEND_CMD  = NAND_AREA_TRUE1;
         rt_thread_delay(10);
 
         for (i = 0; i < spare_len; i ++)
@@ -362,7 +323,7 @@ static rt_err_t _read_page(struct rt_mtd_nand_device *device,
     
     if (rt_hw_nand_wait_ready() != RT_EOK)
     {
-        result = RT_ETIMEOUT;
+        result = -RT_ETIMEOUT;
         goto _exit;
     }
 
@@ -379,13 +340,13 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
                             const rt_uint8_t *spare,
                             rt_uint32_t spare_len)
 {
-    RT_ASSERT(device != RT_NULL);
-
     rt_err_t result = RT_EOK;
     rt_uint32_t eccnum;
     rt_uint32_t i, index;
     rt_uint32_t tickstart = 0;
 
+    RT_ASSERT(device != RT_NULL);
+    
     page = page + device->block_start * device->pages_per_block;
     if (page / device->pages_per_block > device->block_end)
     {
@@ -396,13 +357,13 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
 
     if (data && data_len)
     {
-        NAND_CMD_AREA = NAND_WRITE0;
+        NAND_SEND_CMD = NAND_WRITE0;
 
-        NAND_DATA_AREA = (rt_uint8_t)0;
-        NAND_DATA_AREA = (rt_uint8_t)(0 >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page & 0xFF);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 16);
+        NAND_SEND_ADDR = (rt_uint8_t)0;
+        NAND_SEND_ADDR = (rt_uint8_t)(0 >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page & 0xFF);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 16);
         
         rt_hw_nand_delay(10);
         
@@ -433,7 +394,7 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
                     /* Check for the Timeout */
                     if ((rt_tick_get() - tickstart) > 10000)
                     {
-                        result = RT_ETIMEOUT;
+                        result = -RT_ETIMEOUT;
                         goto _exit;
                     }
                 }
@@ -448,9 +409,9 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
             
             i = device->page_size + 0x10;
             rt_hw_nand_delay(10);
-            NAND_CMD_AREA  = 0x85;
-            NAND_DATA_AREA = (rt_uint8_t)i;
-            NAND_DATA_AREA = (rt_uint8_t)(i>>8);
+            NAND_SEND_CMD  = NAND_RANDOM_WRITE;
+            NAND_SEND_ADDR = (rt_uint8_t)i;
+            NAND_SEND_ADDR = (rt_uint8_t)(i>>8);
             rt_hw_nand_delay(10);
             
             data = (uint8_t*)&ecc_hdbuf[0];
@@ -464,7 +425,7 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
             }              
         }
     }
-    NAND_CMD_AREA = NAND_WRITE_TURE1;
+    NAND_SEND_CMD = NAND_WRITE_TURE1;
     if (rt_hw_nand_wait_ready() != RT_EOK)
     {
         result = -RT_EIO;
@@ -473,18 +434,18 @@ static rt_err_t _write_page(struct rt_mtd_nand_device *device,
         
     if (spare && spare_len)
     {
-        NAND_CMD_AREA = NAND_WRITE0;
-        NAND_DATA_AREA = (rt_uint8_t)(4096 & 0xFF);
-        NAND_DATA_AREA = (rt_uint8_t)(4096 >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page & 0xFF);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 8);
-        NAND_DATA_AREA = (rt_uint8_t)(page >> 16);
+        NAND_SEND_CMD = NAND_WRITE0;
+        NAND_SEND_ADDR = (rt_uint8_t)(4096 & 0xFF);
+        NAND_SEND_ADDR = (rt_uint8_t)(4096 >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page & 0xFF);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 8);
+        NAND_SEND_ADDR = (rt_uint8_t)(page >> 16);
 
         for (i = 4; i < spare_len; i++)
         {
             NAND_ADDR_AREA = spare[i];
         }
-        NAND_CMD_AREA = NAND_WRITE_TURE1;
+        NAND_SEND_CMD = NAND_WRITE_TURE1;
         if (rt_hw_nand_wait_ready() != RT_EOK)
         {
             result = -RT_EIO;
@@ -500,20 +461,21 @@ _exit:
 /* erase one block */
 static rt_err_t _erase_block(struct rt_mtd_nand_device *device, rt_uint32_t block)
 {
-    RT_ASSERT(device != RT_NULL);
     unsigned int block_num;
     rt_err_t result = RT_EOK;
 
+    RT_ASSERT(device != RT_NULL);
+    
     block = block + device->block_start;
     block_num = block << 6;
 
     rt_mutex_take(&_device.lock, RT_WAITING_FOREVER);
 
-    NAND_CMD_AREA = NAND_ERASE0;
-    NAND_DATA_AREA = (uint8_t)block_num;
-    NAND_DATA_AREA = (uint8_t)(block_num >> 8);
-    NAND_DATA_AREA = (uint8_t)(block_num >> 16);
-    NAND_CMD_AREA = NAND_ERASE1;
+    NAND_SEND_CMD = NAND_ERASE0;
+    NAND_SEND_ADDR = (uint8_t)block_num;
+    NAND_SEND_ADDR = (uint8_t)(block_num >> 8);
+    NAND_SEND_ADDR = (uint8_t)(block_num >> 16);
+    NAND_SEND_CMD = NAND_ERASE1;
 
     rt_thread_delay(NAND_TBERS_DELAY);
 
@@ -531,10 +493,11 @@ static rt_err_t _page_copy(struct rt_mtd_nand_device *device,
                            rt_off_t src_page,
                            rt_off_t dst_page)
 {
-    RT_ASSERT(device != RT_NULL);
     rt_err_t result = RT_EOK;
     rt_uint32_t source_block = 0, dest_block = 0;
-
+    
+    RT_ASSERT(device != RT_NULL);
+    
     src_page = src_page + device->block_start * device->pages_per_block;
     dst_page = dst_page + device->block_start * device->pages_per_block;
     source_block = src_page / device->pages_per_block;
@@ -544,23 +507,23 @@ static rt_err_t _page_copy(struct rt_mtd_nand_device *device,
         return RT_MTD_ESRC;
     }
 
-    NAND_CMD_AREA = NAND_MOVEDATA_CMD0;
-    NAND_DATA_AREA = (rt_uint8_t)(0 & 0xFF);
-    NAND_DATA_AREA = (rt_uint8_t)(0 >> 8);
-    NAND_DATA_AREA = (rt_uint8_t)(src_page & 0xFF);
-    NAND_DATA_AREA = (rt_uint8_t)(src_page >> 8);
-    NAND_DATA_AREA = (rt_uint8_t)(src_page >> 16);
-    NAND_CMD_AREA = NAND_MOVEDATA_CMD1;
+    NAND_SEND_CMD = NAND_MOVEDATA_CMD0;
+    NAND_SEND_ADDR = (rt_uint8_t)(0 & 0xFF);
+    NAND_SEND_ADDR = (rt_uint8_t)(0 >> 8);
+    NAND_SEND_ADDR = (rt_uint8_t)(src_page & 0xFF);
+    NAND_SEND_ADDR = (rt_uint8_t)(src_page >> 8);
+    NAND_SEND_ADDR = (rt_uint8_t)(src_page >> 16);
+    NAND_SEND_CMD = NAND_MOVEDATA_CMD1;
 
     rt_hw_nand_delay(10);
 
-    NAND_CMD_AREA = NAND_MOVEDATA_CMD2;
-    NAND_DATA_AREA = ((rt_uint8_t)(0 & 0xFF));
-    NAND_DATA_AREA = ((rt_uint8_t)(0 >> 8));
-    NAND_DATA_AREA = ((rt_uint8_t)(dst_page & 0xFF));
-    NAND_DATA_AREA = ((rt_uint8_t)(dst_page >> 8));
-    NAND_DATA_AREA = ((rt_uint8_t)(dst_page >> 16));
-    NAND_CMD_AREA = (NAND_MOVEDATA_CMD3);
+    NAND_SEND_CMD = NAND_MOVEDATA_CMD2;
+    NAND_SEND_ADDR = ((rt_uint8_t)(0 & 0xFF));
+    NAND_SEND_ADDR = ((rt_uint8_t)(0 >> 8));
+    NAND_SEND_ADDR = ((rt_uint8_t)(dst_page & 0xFF));
+    NAND_SEND_ADDR = ((rt_uint8_t)(dst_page >> 8));
+    NAND_SEND_ADDR = ((rt_uint8_t)(dst_page >> 16));
+    NAND_SEND_CMD = (NAND_MOVEDATA_CMD3);
 
     if (rt_hw_nand_wait_ready() != RT_EOK)
     {
@@ -596,10 +559,11 @@ static struct rt_mtd_nand_device nand_dev;
 
 static rt_err_t nand_init(struct rt_mtd_nand_device *device)
 {
+    rt_uint32_t tempreg = 0;
+    
     RT_ASSERT(device != RT_NULL);
-    uint32_t tempreg = 0;
-
-    rt_hw_nand_gpio_init();
+    
+    HAL_NAND_MspInit(&nand_handle);
 
     tempreg |= 0 << 1;          /* disable Wait feature enable bit */
     tempreg |= 0 << 4;          /* Data bus width 8*/
@@ -627,8 +591,8 @@ static rt_err_t nand_init(struct rt_mtd_nand_device *device)
 
     switch (_device.id)
     {
-        case 0x64A690D3:
-        case 0x569590dc:    
+        case MT29F8G08ABACAH4:
+        case MT29F4G08ABADA:    
             LOG_I("nand id 0x%08x", _device.id);
         break;
         
@@ -655,23 +619,16 @@ int rt_hw_nand_init(void)
         return RT_ERROR;
     }
     rt_mutex_init(&_device.lock, "nand", RT_IPC_FLAG_FIFO);
-#if defined(BSP_USING_MT29F8G08ABACAH4)
-    nand_dev.page_size       = 4096;
-    nand_dev.pages_per_block = 224;
-    nand_dev.plane_num       = 2;
-    nand_dev.oob_size        = 64;
-    nand_dev.oob_free        = 64 - ((4096) * 3 / 256);
-    nand_dev.block_start     = 0;
-    nand_dev.block_end       = 4095;
-#elif defined(BSP_USING_MT29F4G08ABADA)
-    nand_dev.page_size       = 2048;
-    nand_dev.pages_per_block = 64;
-    nand_dev.plane_num       = 2;
-    nand_dev.oob_size        = 64;
-    nand_dev.oob_free        = 64 - ((2048) * 3 / 256);
-    nand_dev.block_start     = 0;
-    nand_dev.block_end       = 4095;    
-#endif
+
+    /* config nand flash parameter */
+    nand_dev.page_size       = nand_config->page_size;
+    nand_dev.pages_per_block = nand_config->pages_per_block;
+    nand_dev.plane_num       = nand_config->plane_num;
+    nand_dev.oob_size        = nand_config->oob_size;
+    nand_dev.oob_free        = nand_config->oob_free;
+    nand_dev.block_start     = nand_config->block_start;
+    nand_dev.block_end       = nand_config->block_end;    
+
     nand_dev.block_total = nand_dev.block_end - nand_dev.block_start;
     nand_dev.ops = &ops;
 

@@ -86,6 +86,7 @@ if GetDepend(['RT_USING_MTD_NOR']):
     src += ['STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_nor.c']
 
 if GetDepend(['RT_USING_MTD_NAND']):
+    src += ['STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c']
     src += ['STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_nand.c']
 
 if GetDepend(['BSP_USING_SDRAM']):
