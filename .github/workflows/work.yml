@@ -36,7 +36,11 @@ jobs:
         bsp-name:
           - "STM32F103" 
           - "STM32F104"
-          - "STM32F105"  
+          - "STM32F105" 
+        tool-chain:
+          - "123"
+          - "t45"
+          - "789"  
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
