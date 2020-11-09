@@ -30,14 +30,13 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    # strategy:
-    #     matrix:
-    #       bsp-name: [
-    #         3.5, 
-    #         3.6, 
-    #         3.7, 
-    #         3.8
-    #         ]
+    strategy:
+        matrix:
+          bsp-name: |
+            [3.5,  
+            3.6,  
+            3.7,  
+            3.8 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -45,3 +44,6 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.8
+      - name: Check Bsp
+        run: |
+          echo ${{ matrix.bsp-name }} 
