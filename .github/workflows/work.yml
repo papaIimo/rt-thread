@@ -34,13 +34,9 @@ jobs:
     strategy:
       matrix:
         bsp-name:
-          - "STM32F103" 
-          - "STM32F104"
-          - "STM32F105" 
-        tool-chain:
-          - "123"
-          - "t45"
-          - "789"  
+          - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
+          - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
+          - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
