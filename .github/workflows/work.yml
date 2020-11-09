@@ -34,7 +34,9 @@ jobs:
     strategy:
       matrix:
         bsp-name:
-          ["STM32F103" ]
+          - "STM32F103" 
+          - "STM32F104"
+          - "STM32F105"  
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
