@@ -47,5 +47,3 @@ jobs:
       - name: test
         run: |
           env
-        env: |
-          ${{ matrix.rtt-bsp }}
