@@ -30,14 +30,6 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    strategy:
-        matrix:
-          bsp-name: |
-            [3.5,  \
-            3.6,  \
-            3.7,  \
-            3.8 ]
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -46,4 +38,7 @@ jobs:
           python-version: 3.8
       - name: Check Bsp
         run: |
-          echo ${{ matrix.bsp-name }} 
+          echo $RTT_BSP
+        env: |
+          RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'  
+          RTT_BSP='apollo2' RTT_TOOL_CHAIN='sourcery-arm'
