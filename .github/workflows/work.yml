@@ -33,7 +33,7 @@ jobs:
     # work matrix     
     strategy:
       matrix:
-        bsp-name: |
+        bsp-name:
           ["STM32F103" ]
     steps:
       - uses: actions/checkout@v2
