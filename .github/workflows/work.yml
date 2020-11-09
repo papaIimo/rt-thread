@@ -44,6 +44,8 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Set up Python
+      - name: test
         run: |
-          echo ${{ matrix.rtt-bsp }}
+          env
+        env: |
+          ${{ matrix.rtt-bsp }}
