@@ -33,7 +33,7 @@ jobs:
     # work matrix     
     strategy:
       matrix:
-        bsp-name:
+        rtt-bsp:
           - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
           - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
           - RTT_BSP='CME_M7' RTT_TOOL_CHAIN='sourcery-arm'
@@ -44,3 +44,6 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: Set up Python
+        run: |
+          echo ${{ matrix.rtt-bsp }}
