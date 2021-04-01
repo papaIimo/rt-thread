@@ -5,7 +5,7 @@ on: [pull_request]
 jobs:
   scancode_job:
     runs-on: ubuntu-latest
-    name: Scan code for licenses
+    name: Scan code format and license
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
