@@ -80,7 +80,7 @@ class FormatCheck:
         return check_result
 
     def check(self):
-        print("Start to check files format.")
+        logging.info("Start to check files format.")
         if len(self.file_list) == 0:
             logging.warning("There are no files to check license.")
             return 0
@@ -102,8 +102,10 @@ class FormatCheck:
                 continue
 
             if code != 'utf-8':
-                print("file[{0}]: encoding not utf-8, please format it.".format(file_path))
+                logging.error("[{0}]: encoding not utf-8, please format it.".format(file_path))
                 encoding_check_result = False
+            else:
+                logging.info('[{0}]: encoding check success.'.format(file_path))
 
             format_check_result = self.__check_file(file_lines)    
 
@@ -142,13 +144,13 @@ class LicenseCheck:
                 license_year = re.search(r'2006-\d{4}', file[1]).group()
                 true_year = '2006-{}'.format(current_year)
                 if license_year != true_year:
-                    logging.warning("file: {} license year: {} is not true: {}, please update.".format(file_path,
+                    logging.warning("[{0}]: license year: {} is not true: {}, please update.".format(file_path,
                                                                                                        license_year,
                                                                                                        true_year))
                 else:
-                    logging.info("file: {} license check success.".format(file_path))
+                    logging.info("[{0}]: license check success.".format(file_path))
             else:
-                logging.error("file: {} license check fail.".format(file_path))
+                logging.error("[{0}]: license check fail.".format(file_path))
                 check_result = False
 
         if not check_result:
