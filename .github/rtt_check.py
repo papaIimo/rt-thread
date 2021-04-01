@@ -55,6 +55,7 @@ class CheckOut:
 
         return file_list
 
+
 class FormatCheck:
     def __init__(self, file_list):
         self.file_list = file_list
@@ -79,7 +80,7 @@ class FormatCheck:
         return check_result
 
     def check(self):
-        logging.info("Start to check files format.")
+        print("Start to check files format.")
         if len(self.file_list) == 0:
             logging.warning("There are no files to check license.")
             return 0
@@ -101,7 +102,7 @@ class FormatCheck:
                 continue
 
             if code != 'utf-8':
-                logging.error("file: {} encoding not utf-8, please format it.".format(file_path))
+                print("file[{0}]: encoding not utf-8, please format it.".format(file_path))
                 encoding_check_result = False
 
             format_check_result = self.__check_file(file_lines)    
@@ -161,22 +162,29 @@ class LicenseCheck:
 def cli(ctx):
     pass
 
+
 @cli.command()
 @click.option(
     '--license',
-    "license",
+    "check_license",
     required=False,
     type=click.BOOL,
     flag_value=True,
     help="Enable File license check.",
 )
 @click.argument(
-    'repo', nargs=1, type=click.STRING, default='https://github.com/RT-Thread/rt-thread'
+    'repo',
+    nargs=1,
+    type=click.STRING,
+    default='https://github.com/RT-Thread/rt-thread',
 )
 @click.argument(
-    'branch', nargs=1, type=click.STRING, default='master'
+    'branch',
+    nargs=1,
+    type=click.STRING,
+    default='master',
 )
-def check(license, repo, branch):
+def check(check_license, repo, branch):
     """
     check files license and format.
     """
@@ -185,14 +193,14 @@ def check(license, repo, branch):
     checkout = CheckOut(repo, branch)
     file_list = checkout.get_new_file()
     if file_list is None:
-        logging.error("chout files fail")
+        logging.error("checkout files fail")
         sys.exit(1)
 
     # check modified files format
     format_check = FormatCheck(file_list)
     format_check_result = format_check.check()
     license_check_result = True
-    if license:
+    if check_license:
         license_check = LicenseCheck(file_list)
         license_check_result = license_check.check()
 
