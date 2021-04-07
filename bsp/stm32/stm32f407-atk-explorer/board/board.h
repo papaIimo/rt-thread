@@ -38,11 +38,11 @@ extern int __bss_end;
 #define HEAP_BEGIN      ((void *)&__bss_end)
 #endif
 
-#define HEAP_END        STM32_SRAM_END
+	#define HEAP_END        STM32_SRAM_END
 
-void SystemClock_Config(void);
+	void SystemClock_Config(void);
 
-#ifdef __cplusplus
+	#ifdef __cplusplus
 }
 #endif
 

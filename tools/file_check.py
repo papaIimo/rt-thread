@@ -34,7 +34,16 @@ class CheckOut:
         self.rtt_branch = rtt_branch
 
     def __exclude_file(self, file_path):
-        ignore_file_path = os.path.join(self.root, 'ignore_format.yml')
+        dir_number = file_path.split('/')
+        ignore_path = file_path
+        for i in dir_number:
+            dir_name = os.path.dirname(ignore_path)
+            if os.path.exists(os.path.join(dir_name, ".ignore_format.yml")):
+                break
+            ignore_path = dir_name
+        ignore_file_path = os.path.join(dir_name, ".ignore_format.yml")
+        if not os.path.exists(ignore_file_path):
+            return 0
         try:
             with open(ignore_file_path) as f:
                 ignore_config = yaml.safe_load(f.read())
@@ -44,12 +53,16 @@ class CheckOut:
             logging.error(e)
             return 1
 
-        if file_path in file_ignore:
-            return 0
+        for file in file_ignore:
+            file_real_path = os.path.join(dir_name, file).replace("\\", "/")
+            if file_real_path == file_path:
+                return 0
 
         file_dir_path = os.path.dirname(file_path)
-        if file_dir_path in dir_ignore:
-            return 0
+        for _dir in dir_ignore:
+            dir_real_path = os.path.join(dir_name, _dir).replace("\\", "/")
+            if dir_real_path == file_dir_path:
+                return 0
 
         return 1
 
