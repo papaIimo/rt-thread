@@ -53,5 +53,5 @@ jobs:
         run: |
           mv ${{ matrix.legs.CONFIG_FILE }} bsp/$RTT_BSP/
           docker pull ${{ secrets.DOCKERHUB_REPO }}
-          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE}} -s None -d 5"      
+          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -d 5"      
       
