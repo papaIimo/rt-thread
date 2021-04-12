@@ -29,11 +29,10 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         - {UTEST: "CME_M7", RTT_TOOL_CHAIN: "sourcery-arm"}
-         - {UTEST: "apollo2", RTT_TOOL_CHAIN: "sourcery-arm"}
-         - {UTEST: "asm9260t", RTT_TOOL_CHAIN: "sourcery-arm"}
-         - {UTEST: "at91sam9260", RTT_TOOL_CHAIN: "sourcery-arm"}
-         - {UTEST: "allwinner_tina", RTT_TOOL_CHAIN: "sourcery-arm"}
+         - {UTEST: "components", RTT_BSP: "stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
+         - {UTEST: "lwip", RTT_BSP: "stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
+         - {UTEST: "net", RTT_BSP: "stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
+         - {UTEST: "filesystem", RTT_BSP: "stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
 
     steps:
       - uses: actions/checkout@v2
@@ -42,15 +41,40 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install Tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get -qq install gcc-multilib libsdl-dev scons
+          echo "RTT_ROOT=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "RTT_CC=gcc" >> $GITHUB_ENV
+ 
+      - name: Install Arm ToolChains
+        shell: bash
+        run: |
+          wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/arm-2017q2-v6/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
+          sudo tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2 -C /opt
+          /opt/gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi-gcc --version
+          echo "RTT_EXEC_PATH=/opt/gcc-arm-none-eabi-6-2017-q2-update/bin" >> $GITHUB_ENV
+
+      - name: Bsp Scons Compile
+        if: ${{ success() }}
+        shell: bash
+        env:
+          RTT_BSP: ${{ matrix.legs.RTT_BSP }}
+          RTT_TOOL_CHAIN: 'sourcery-arm'
+        run: |
+          mv ${{ matrix.legs.CONFIG_FILE }} bsp/$RTT_BSP/
+          scons -C bsp/$RTT_BSP
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         
-      - name: Run RT-Thread Utest
+      - name: Run Utest
         shell: bash
-        if: github.repository != 'RT-Thread-Studio/sdk-index' && success()
         run: |
           docker pull ${{ secrets.DOCKERHUB_REPO }}
           docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} bash -c "ls -al"      
