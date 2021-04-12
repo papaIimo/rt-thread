@@ -48,24 +48,6 @@ jobs:
           sudo apt-get -qq install gcc-multilib libsdl-dev scons
           echo "RTT_ROOT=${{ github.workspace }}" >> $GITHUB_ENV
           echo "RTT_CC=gcc" >> $GITHUB_ENV
- 
-      - name: Install Arm ToolChains
-        shell: bash
-        run: |
-          wget -q https://github.com/RT-Thread/toolchains-ci/releases/download/arm-2017q2-v6/gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2
-          sudo tar xjf gcc-arm-none-eabi-6-2017-q2-update-linux.tar.bz2 -C /opt
-          /opt/gcc-arm-none-eabi-6-2017-q2-update/bin/arm-none-eabi-gcc --version
-          echo "RTT_EXEC_PATH=/opt/gcc-arm-none-eabi-6-2017-q2-update/bin" >> $GITHUB_ENV
-
-      - name: Bsp Scons Compile
-        if: ${{ success() }}
-        shell: bash
-        env:
-          RTT_BSP: ${{ matrix.legs.RTT_BSP }}
-          RTT_TOOL_CHAIN: 'sourcery-arm'
-        run: |
-          mv ${{ matrix.legs.CONFIG_FILE }} bsp/$RTT_BSP/
-          scons -C bsp/$RTT_BSP
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -74,8 +56,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         
       - name: Run Utest
-        shell: bash
+        if: ${{ success() }}  
+        shell: bash     
         run: |
+          mv ${{ matrix.legs.CONFIG_FILE }} bsp/$RTT_BSP/
           docker pull ${{ secrets.DOCKERHUB_REPO }}
-          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} bash -c "ls -al"      
+          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.QEMU_ARCH }} -c {{ matrix.CONFIG_FILE }}"      
       
