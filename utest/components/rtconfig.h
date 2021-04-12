@@ -16,6 +16,9 @@
 #define RT_USING_IDLE_HOOK
 #define RT_IDLE_HOOK_LIST_SIZE 4
 #define IDLE_THREAD_STACK_SIZE 1024
+#define RT_USING_TIMER_SOFT
+#define RT_TIMER_THREAD_PRIO 4
+#define RT_TIMER_THREAD_STACK_SIZE 512
 #define RT_DEBUG
 #define RT_DEBUG_COLOR
 
@@ -38,7 +41,7 @@
 
 #define RT_USING_DEVICE
 #define RT_USING_CONSOLE
-#define RT_CONSOLEBUF_SIZE 256
+#define RT_CONSOLEBUF_SIZE 128
 #define RT_CONSOLE_DEVICE_NAME "uart1"
 #define RT_VER_NUM 0x40003
 #define ARCH_ARM
@@ -109,6 +112,20 @@
 
 /* Utilities */
 
+#define RT_USING_ULOG
+#define ULOG_OUTPUT_LVL_D
+#define ULOG_OUTPUT_LVL 7
+#define ULOG_USING_ISR_LOG
+#define ULOG_ASSERT_ENABLE
+#define ULOG_LINE_BUF_SIZE 128
+
+/* log format */
+
+#define ULOG_USING_COLOR
+#define ULOG_OUTPUT_TIME
+#define ULOG_OUTPUT_LEVEL
+#define ULOG_OUTPUT_TAG
+#define ULOG_BACKEND_USING_CONSOLE
 #define RT_USING_UTEST
 #define UTEST_THR_STACK_SIZE 4096
 #define UTEST_THR_PRIORITY 20
@@ -161,6 +178,116 @@
 
 /* entertainment: terminal games and other interesting software packages */
 
+
+/* Privated Packages of RealThread */
+
+
+/* Network Utilities */
+
+#define RT_USING_TESTCASE
+#define RT_USING_TESTCASE_GENERAL
+
+/* kernel test */
+
+/* ipc */
+
+#define TC_USING_IPC_SEMAPHORE_TC
+#define TC_USING_IPC_MUTEX_TC
+#define TC_USING_IPC_EVENT_TC
+#define TC_USING_IPC_MAILBOX_TC
+#define TC_USING_IPC_MESSAGEQUEUE_TC
+
+/* kservice test */
+
+
+/* thread */
+
+
+/* object */
+
+
+/* memory */
+
+
+/* timer */
+
+
+/* smp */
+
+
+/* component test */
+
+/* cplusplus test */
+
+/* thread */
+
+
+/* ipc */
+
+
+/* dfs: Device virtual file system */
+
+
+/* drivers */
+
+/* i2c */
+
+
+/* spi */
+
+
+/* wlan */
+
+
+/* uart */
+
+
+/* hwcrypto */
+
+
+/* sensor */
+
+
+/* finsh shell */
+
+
+/* libc */
+
+
+/* at */
+
+/* netdev */
+
+/* lwIP */
+
+/* SAL */
+
+/* Utilities */
+
+/* utest selftest */
+
+
+/* packages test */
+
+/* iot */
+
+/* netutils */
+
+
+/* webclient */
+
+
+/* Paho MQTT */
+
+
+/* system */
+
+/* fal */
+
+
+/* realthread-packages test */
+
+#define PKG_USING_TESTCASES_LATEST_VERSION
 #define SOC_FAMILY_STM32
 #define SOC_SERIES_STM32F4
 
