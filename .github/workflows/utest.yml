@@ -44,4 +44,4 @@ jobs:
         shell: bash     
         run: |
           docker pull ${{ secrets.DOCKERHUB_REPO }}
-          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }}"
+          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -d 60"
