@@ -29,10 +29,10 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         - {UTEST: "components", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
-         - {UTEST: "lwip", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
-         - {UTEST: "net", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
-         - {UTEST: "filesystem", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
+         - {UTEST: "components", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
+         - {UTEST: "lwip", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
+         - {UTEST: "net", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
+         - {UTEST: "filesystem", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
 
     steps:
       - uses: actions/checkout@v2

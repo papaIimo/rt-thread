@@ -19,6 +19,9 @@
 #define RT_USING_TIMER_SOFT
 #define RT_TIMER_THREAD_PRIO 4
 #define RT_TIMER_THREAD_STACK_SIZE 512
+
+/* kservice optimization */
+
 #define RT_DEBUG
 #define RT_DEBUG_COLOR
 
@@ -29,6 +32,7 @@
 #define RT_USING_EVENT
 #define RT_USING_MAILBOX
 #define RT_USING_MESSAGEQUEUE
+#define RT_USING_SIGNALS
 
 /* Memory Management */
 
@@ -196,6 +200,7 @@
 #define TC_USING_IPC_EVENT_TC
 #define TC_USING_IPC_MAILBOX_TC
 #define TC_USING_IPC_MESSAGEQUEUE_TC
+#define TC_USING_IPC_SIGNAL_TC
 
 /* kservice test */
 
