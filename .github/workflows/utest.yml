@@ -1,4 +1,4 @@
-name: RT-Thread
+name: RT-Thread-Utest
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -9,17 +9,9 @@ on:
   push:
     branches:
       - utest
-    paths-ignore:
-      - documentation/**
-      - '**/README.md'
-      - '**/README_zh.md'
   pull_request:
     branches:
       - utest
-    paths-ignore:
-      - documentation/**
-      - '**/README.md'
-      - '**/README_zh.md'
 
 jobs:
   build:
@@ -29,7 +21,10 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         - {UTEST: "components", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/rtconfig.h"}
+         - {UTEST: "kernel/ipc", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/ipc"}
+         - {UTEST: "kernel/object", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/object"}
+         - {UTEST: "kernel/thread", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/thread"}
+         - {UTEST: "component/finsh", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/component/finsh"}
 
     steps:
       - uses: actions/checkout@v2
@@ -50,4 +45,3 @@ jobs:
         run: |
           docker pull ${{ secrets.DOCKERHUB_REPO }}
           docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }}"
-      
