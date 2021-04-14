@@ -30,9 +30,6 @@ jobs:
       matrix:
        legs:
          - {UTEST: "components", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
-         - {UTEST: "lwip", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
-         - {UTEST: "net", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
-         - {UTEST: "filesystem", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/components/"}
 
     steps:
       - uses: actions/checkout@v2
@@ -52,5 +49,5 @@ jobs:
         shell: bash     
         run: |
           docker pull ${{ secrets.DOCKERHUB_REPO }}
-          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -g ${{ secrets.GITLAB_TOKEN }} -d 5"
+          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -d 5"
       
