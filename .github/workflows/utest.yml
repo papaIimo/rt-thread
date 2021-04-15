@@ -44,8 +44,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         
       - name: Run Utest
-        if: ${{ success() }}  
+        if: ${{ success() }}
         shell: bash     
         run: |
           docker pull ${{ secrets.DOCKERHUB_REPO }}
-          docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -s ${{ matrix.legs.SD_PATH }} -d 60"
+          if [ ! -n "${{ matrix.legs.SD_PATH }}" ]; then
+            docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -d 60"
+          else
+            docker run -v "`pwd`:/rt-thread" -i ${{ secrets.DOCKERHUB_REPO }} /bin/bash -c "python utest/rtt_utest.py -b ${{ matrix.legs.RTT_BSP }} -q ${{ matrix.legs.QEMU_ARCH }} -c ${{ matrix.legs.CONFIG_FILE }} -s ${{ matrix.legs.SD_PATH }} -d 60"
+          fi
