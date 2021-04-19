@@ -21,13 +21,13 @@ jobs:
       fail-fast: false
       matrix:
        legs:
-         - {UTEST: "kernel/ipc", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/ipc"}
+         - {UTEST: "kernel/ipc",      RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/ipc"}
          - {UTEST: "kernel/kservice", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/kservice"}
-         - {UTEST: "kernel/memory", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/memory"}
-         - {UTEST: "kernel/timer", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/timer"}
-         - {UTEST: "kernel/object", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/object"}
-         - {UTEST: "kernel/thread", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/thread"}
-         - {UTEST: "component/dfs", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/component/dfs", SD_PATH: "utest/component/dfs/sd.bin"}
+         - {UTEST: "kernel/memory",   RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/memory"}
+         - {UTEST: "kernel/timer",    RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/timer"}
+         - {UTEST: "kernel/object",   RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/object"}
+         - {UTEST: "kernel/thread",   RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/kernel/thread"}
+         - {UTEST: "component/dfs",   RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/component/dfs", SD_PATH: "utest/component/dfs/sd.bin"}
          - {UTEST: "component/finsh", RTT_BSP: "bsp/stm32/stm32f429-atk-apollo", QEMU_ARCH: "stm32f429-atk-apollo", CONFIG_FILE: "utest/component/finsh"}
 
     steps:
